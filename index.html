@@ -189,6 +189,7 @@
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 </head>
 <body>
 
@@ -377,11 +378,22 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 const docRef = db.collection('roastery-checklist').doc('shared-state');
 
 function setSyncStatus(text,color){
   const el=document.getElementById('sync-status');
   if(el){el.textContent=text;el.style.color=color||'var(--text3)';}
+}
+
+function signInAndSubscribe(){
+  setSyncStatus('● 인증 중...','var(--text3)');
+  auth.signInAnonymously().then(()=>{
+    subscribe();
+  }).catch(err=>{
+    console.error(err);
+    setSyncStatus('● 인증 실패 — 새로고침 해주세요','var(--danger-text)');
+  });
 }
 
 let firstSnapshot=true;
@@ -566,7 +578,7 @@ const SITE_PASSWORD='beanbean';
 function enterApp(){
   document.getElementById('gate').style.display='none';
   document.getElementById('app-content').style.display='flex';
-  subscribe();
+  signInAndSubscribe();
 }
 function checkPassword(){
   const val=document.getElementById('gate-input').value;
