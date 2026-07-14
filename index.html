@@ -192,6 +192,18 @@
 </head>
 <body>
 
+<div id="gate" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100;flex-direction:column;gap:14px;">
+  <div style="font-size:15px;font-weight:700">☕ 로스터리 체크리스트</div>
+  <div style="font-size:11.5px;color:var(--text2)">비밀번호를 입력해주세요</div>
+  <input type="password" id="gate-input" placeholder="비밀번호"
+    style="width:220px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;text-align:center;outline:none;"
+    onkeydown="if(event.key==='Enter')checkPassword()">
+  <button class="btn edit-on" style="padding:8px 20px" onclick="checkPassword()">입장</button>
+  <div id="gate-error" style="font-size:11px;color:var(--danger-text);display:none">비밀번호가 틀렸어요</div>
+</div>
+
+<div id="app-content" style="display:none;flex-direction:column;height:100%;">
+
 <div class="hdr">
   <div class="hdr-l">
     <span class="hdr-title">☕ 로스터리 체크리스트</span>
@@ -220,6 +232,8 @@
       <button class="btn reset" onclick="resetCurrent()">이 주기 초기화</button>
     </div>
   </div>
+</div>
+
 </div>
 
 <script>
@@ -547,7 +561,29 @@ const days=['일','월','화','수','목','금','토'],now=new Date();
 document.getElementById('today-date').textContent=
   `${now.getFullYear()}. ${now.getMonth()+1}. ${now.getDate()} (${days[now.getDay()]})`;
 
-subscribe();
+/* ===== 비밀번호 게이트 ===== */
+const SITE_PASSWORD='beanbean';
+function enterApp(){
+  document.getElementById('gate').style.display='none';
+  document.getElementById('app-content').style.display='flex';
+  subscribe();
+}
+function checkPassword(){
+  const val=document.getElementById('gate-input').value;
+  if(val===SITE_PASSWORD){
+    sessionStorage.setItem('rlx_auth','1');
+    enterApp();
+  }else{
+    document.getElementById('gate-error').style.display='block';
+    document.getElementById('gate-input').value='';
+    document.getElementById('gate-input').focus();
+  }
+}
+if(sessionStorage.getItem('rlx_auth')==='1'){
+  enterApp();
+}else{
+  document.getElementById('gate-input').focus();
+}
 </script>
 </body>
 </html>
