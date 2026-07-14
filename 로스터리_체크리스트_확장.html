@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로스터리 체크리스트</title>
+<style>
+  :root {
+    --bg:#ffffff;--bg2:#f7f6f3;--bg3:#e9e9e6;
+    --text:#1a1a1a;--text2:#6b6b6b;--text3:#bbb;
+    --border:#e8e8e8;
+    --accent:#2563eb;--accent-light:#eff6ff;
+    --purple:#7c3aed;--purple-light:#f5f3ff;
+    --teal:#0d9488;--teal-light:#f0fdfa;
+    --pink:#db2777;--pink-light:#fdf2f8;
+    --orange:#ea580c;--orange-light:#fff7ed;
+    --indigo:#4338ca;--indigo-light:#eef2ff;
+    --warn-bg:#fffbeb;--warn-text:#92400e;--warn-border:#fde68a;
+    --danger-bg:#fef2f2;--danger-text:#991b1b;--danger-border:#fecaca;
+    --success:#16a34a;
+    --r:7px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:-apple-system,'Pretendard',sans-serif;
+    background:var(--bg);color:var(--text);font-size:12px;
+    display:flex;flex-direction:column;
+  }
+
+  /* 헤더 */
+  .hdr{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0;
+    background:var(--bg);
+  }
+  .hdr-l{display:flex;align-items:baseline;gap:10px}
+  .hdr-title{font-size:13px;font-weight:700;letter-spacing:-.3px}
+  .hdr-date{font-size:11px;color:var(--text3)}
+
+  /* 기기 탭 */
+  .tabs{
+    display:flex;padding:0 14px;
+    border-bottom:1px solid var(--border);flex-shrink:0;gap:0;
+  }
+  .tab{
+    padding:6px 13px;font-size:12px;font-weight:500;cursor:pointer;
+    border:none;background:none;color:var(--text3);
+    border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .12s;
+  }
+  .tab:hover{color:var(--text2)}
+  .tab.active{color:var(--text);border-bottom-color:var(--accent)}
+
+  /* 주기 탭 */
+  .period-tabs{
+    display:flex;gap:5px;padding:7px 14px;flex-shrink:0;
+    border-bottom:1px solid var(--border);flex-wrap:wrap;
+  }
+  .ptab{
+    font-size:11px;font-weight:600;padding:5px 11px;border-radius:16px;
+    border:1px solid var(--border);background:var(--bg);color:var(--text2);
+    cursor:pointer;transition:all .12s;white-space:nowrap;
+    display:flex;align-items:center;gap:6px;
+  }
+  .ptab:hover{background:var(--bg2)}
+  .ptab .cnt{font-size:9.5px;color:var(--text3)}
+  .ptab.active{color:#fff;border-color:transparent}
+  .ptab.active .cnt{color:rgba(255,255,255,.75)}
+  .ptab[data-p="daily"].active{background:var(--accent)}
+  .ptab[data-p="weekly"].active{background:var(--purple)}
+  .ptab[data-p="biweekly"].active{background:var(--teal)}
+  .ptab[data-p="monthly"].active{background:var(--pink)}
+  .ptab[data-p="quarterly"].active{background:var(--orange)}
+  .ptab[data-p="yearly"].active{background:var(--indigo)}
+
+  /* 패널 */
+  .panels{flex:1;overflow:hidden;min-height:0}
+  .panel{display:none;height:100%;flex-direction:column;padding:9px 14px 10px;gap:8px}
+  .panel.active{display:flex}
+
+  /* 진행률 (현재 주기) */
+  .prog-card{
+    background:var(--bg2);border-radius:6px;padding:6px 10px;
+    display:flex;align-items:center;gap:8px;flex-shrink:0;
+  }
+  .prog-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+  .pb-wrap{flex:1;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden}
+  .pb{height:3px;border-radius:2px;transition:width .3s ease;background:var(--accent)}
+  .pb-txt{font-size:11px;color:var(--text3);white-space:nowrap;min-width:28px;text-align:right}
+  .pb-txt.done{color:var(--success);font-weight:600}
+
+  /* 섹션 컨테이너 (세로 스크롤) */
+  .sections{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;min-height:0}
+
+  /* 섹션 */
+  .sec{
+    display:flex;flex-direction:column;
+    border:1px solid var(--border);border-radius:var(--r);
+    overflow:hidden;flex-shrink:0;
+  }
+  .sec-hd{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:5px 10px;background:var(--bg2);
+    border-bottom:1px solid var(--border);flex-shrink:0;
+  }
+  .sec-title{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+  .sec-empty{padding:14px 10px;font-size:11.5px;color:var(--text3);text-align:center}
+  .cl{display:flex;flex-direction:column}
+
+  /* 체크 리스트 */
+  .crow{
+    display:flex;align-items:flex-start;gap:7px;
+    padding:6px 10px;border-bottom:1px solid var(--border);
+    transition:background .08s;
+  }
+  .crow:last-child{border-bottom:none}
+  .crow:hover{background:var(--bg2)}
+  .crow input[type=checkbox]{
+    width:13px;height:13px;margin-top:2px;flex-shrink:0;
+    cursor:pointer;accent-color:var(--accent);
+  }
+  .edit-active .crow input[type=checkbox]{pointer-events:none;opacity:.25}
+  .clabel{flex:1;line-height:1.4;color:var(--text);font-size:12px;cursor:pointer}
+  .clabel.done{color:var(--text3);text-decoration:line-through}
+  .clabel[contenteditable=true]{
+    outline:none;background:var(--accent-light);
+    border-radius:3px;padding:0 3px;cursor:text;
+  }
+  .wtag{
+    font-size:9px;color:var(--warn-text);background:var(--warn-bg);
+    border:1px solid var(--warn-border);border-radius:3px;
+    padding:1px 4px;flex-shrink:0;align-self:center;white-space:nowrap;
+  }
+  .del-btn{
+    display:none;background:none;border:none;
+    color:var(--text3);cursor:pointer;font-size:13px;
+    padding:0 1px;flex-shrink:0;align-self:center;line-height:1;
+  }
+  .del-btn:hover{color:var(--danger-text)}
+  .edit-active .del-btn{display:block}
+
+  /* 새 항목 입력 (편집 모드에서만) */
+  .new-row{
+    display:none;align-items:center;gap:5px;
+    padding:5px 8px;border-top:1px solid var(--border);
+    background:var(--accent-light);flex-shrink:0;
+  }
+  .new-row.show{display:flex}
+  .new-ico{font-size:12px;color:var(--accent);flex-shrink:0;font-weight:700}
+  .new-inp{
+    flex:1;font-size:11px;padding:3px 0;
+    border:none;background:none;color:var(--text);
+    font-family:inherit;outline:none;
+  }
+  .new-inp::placeholder{color:var(--text3)}
+  .new-warn{
+    font-size:10px;padding:2px 5px;
+    border:1px solid var(--warn-border);border-radius:3px;
+    background:var(--warn-bg);color:var(--warn-text);
+    font-family:inherit;width:70px;outline:none;
+  }
+  .new-warn::placeholder{color:var(--warn-border)}
+  .new-add{
+    font-size:10px;padding:2px 7px;
+    border:1px solid var(--accent);border-radius:4px;
+    background:var(--accent);color:#fff;
+    cursor:pointer;font-family:inherit;flex-shrink:0;
+  }
+
+  /* 메모 + 액션 */
+  .bottom{display:flex;gap:8px;flex-shrink:0;align-items:flex-end}
+  .memo{
+    flex:1;font-size:11px;padding:5px 8px;
+    border:1px solid var(--border);border-radius:var(--r);
+    background:var(--bg2);color:var(--text);
+    resize:none;height:32px;font-family:inherit;line-height:1.4;
+  }
+  .memo:focus{outline:none;border-color:var(--accent);background:var(--bg)}
+  .btn{
+    font-size:11px;padding:5px 10px;border-radius:6px;cursor:pointer;
+    border:1px solid var(--border);background:var(--bg);color:var(--text2);
+    font-family:inherit;transition:all .1s;white-space:nowrap;flex-shrink:0;
+  }
+  .btn:hover{background:var(--bg2);color:var(--text)}
+  .btn.edit-on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.edit-on:hover{background:#1d4ed8}
+  .btn.reset{color:var(--danger-text);border-color:var(--danger-border)}
+  .btn.reset:hover{background:var(--danger-bg)}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-l">
+    <span class="hdr-title">☕ 로스터리 체크리스트</span>
+    <span class="hdr-date" id="today-date"></span>
+    <span class="hdr-date" id="sync-status" style="color:var(--text3)">● 연결 중...</span>
+  </div>
+  <div style="display:flex;gap:6px">
+    <button class="btn reset" onclick="resetAll()">전체 초기화</button>
+  </div>
+</div>
+
+<div class="tabs" id="machine-tabs"></div>
+<div class="period-tabs" id="period-tabs"></div>
+
+<div class="panels">
+  <div class="panel active" id="panel">
+    <div class="prog-card">
+      <span class="prog-lbl" id="prog-lbl"></span>
+      <div class="pb-wrap"><div class="pb" id="pb"></div></div>
+      <span class="pb-txt" id="pt">0/0</span>
+    </div>
+    <div class="sections" id="sections"></div>
+    <div class="bottom">
+      <textarea class="memo" id="memo" placeholder="특이사항 메모..."></textarea>
+      <button class="btn" id="edit-btn" onclick="toggleEdit()">✏️ 편집</button>
+      <button class="btn reset" onclick="resetCurrent()">이 주기 초기화</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== 정의 ===== */
+const MACHINES=[
+  {key:'s35',label:'Loring S35'},
+  {key:'s70',label:'Loring S70'},
+  {key:'common',label:'공통 장비'},
+];
+const PERIODS=[
+  {key:'daily',label:'일간'},
+  {key:'weekly',label:'주간'},
+  {key:'biweekly',label:'격주'},
+  {key:'monthly',label:'월간'},
+  {key:'quarterly',label:'분기'},
+  {key:'yearly',label:'연간'},
+];
+
+const DEFAULT={
+  s35:{
+    daily:[
+      {title:'가동 전 점검',items:[
+        {t:'채프 통 비우기 (높이 2/3 초과 시 즉시)',w:'채프 확인'},
+        {t:'채프 통 재설치 후 잠금 레버 조임 확인'},
+        {t:'모든 냉각관 장치 및 잠금 장치 조임 확인'},
+        {t:'쿨링 트레이 비워짐 및 쿨러 배출구 닫힘 확인'},
+        {t:'로스터기 문 닫힘 확인'},
+        {t:'그린빈 카트 바닥 자석 게이트 이물질 청소'},
+        {t:'에어 컴프레셔·수도·가스 밸브 개방'},
+        {t:'가스 공급 압력 및 메인 배기 온도 정상 범위 확인'},
+      ]},
+      {title:'마감 점검',items:[
+        {t:'Cool Down 완료 후 귀환 공기 온도 65°C 이하 확인'},
+        {t:'전원 차단 및 공기·물·가스 밸브 잠금'},
+        {t:'채프 통 최종 비우기'},
+      ]},
+    ],
+    weekly:[
+      {title:'사이클론',items:[
+        {t:'채프 통 내외부 청소 및 뚜껑 아래 가연성 물질 제거'},
+        {t:'사이클론 통풍관 청소'},
+        {t:'채프 진압 스프레이 노즐 작동 확인 (Chaff Quench → 120도 패턴)'},
+      ]},
+      {title:'쿨링 트레이',items:[
+        {t:'쿨링 트레이 내부 청소 (주 전원 끄고 교반기 날개·패들 제거 후)'},
+        {t:'쿨링판 및 쿨링암 청소'},
+        {t:'통풍구 내부 원두 가루 제거'},
+      ]},
+      {title:'진공 엘리베이터 및 기타',items:[
+        {t:'진공 엘리베이터 필터 청소 (에어노즐: 안쪽→바깥쪽)',w:'역방향 금지'},
+        {t:'생두 계량 카트 청소'},
+        {t:'디스토너 내부 청소'},
+      ]},
+    ],
+    biweekly:[{title:'격주 점검',items:[]}],
+    monthly:[{title:'월간 점검',items:[]}],
+    quarterly:[{title:'분기 점검',items:[]}],
+    yearly:[{title:'연간 점검',items:[]}],
+  },
+  s70:{
+    daily:[
+      {title:'가동 전 점검',items:[
+        {t:'채프 통 비우기 (10배치마다, 높이 2/3 초과 금지)',w:'10배치마다'},
+        {t:'채프 통 재설치 후 잠금 레버 조임 확인'},
+        {t:'모든 냉각관 장치 및 잠금 장치 조임 확인'},
+        {t:'쿨링 트레이 타공망 막힘 여부 확인'},
+        {t:'로스터기 문 닫힘 확인'},
+        {t:'그린빈 카트 바닥 자석 게이트 이물질 청소'},
+        {t:'에어 컴프레셔·수도·가스 밸브 개방'},
+        {t:'가스 공급 압력 및 메인 배기 온도 정상 범위 확인'},
+        {t:'생두 진공 로더(리프팅) 정상 작동 확인'},
+        {t:'디스모거 필터 상태 및 작동 여부 확인'},
+      ]},
+      {title:'마감 점검',items:[
+        {t:'Cool Down 완료 후 귀환 공기 온도 65°C 이하 확인'},
+        {t:'전원 차단 및 공기·물·가스 밸브 잠금'},
+        {t:'채프 통 100% 비우기'},
+      ]},
+    ],
+    weekly:[
+      {title:'사이클론',items:[
+        {t:'대형 채프 통 내외부 및 뚜껑 아래 벽면 정밀 청소'},
+        {t:'사이클론 통풍관 및 배기 덕트 찌꺼기 제거'},
+        {t:'채프 진압 스프레이 노즐 작동 확인'},
+      ]},
+      {title:'쿨링 트레이',items:[
+        {t:'쿨링 트레이 내부 및 쿨링판/쿨링암 정밀 청소'},
+        {t:'통풍구 내부 원두 가루 제거'},
+      ]},
+      {title:'진공 엘리베이터 및 기타',items:[
+        {t:'진공 엘리베이터 필터 청소 (에어노즐: 안쪽→바깥쪽)',w:'역방향 금지'},
+        {t:'대형 생두 계량 카트 청소'},
+        {t:'디스토너 내부 청소'},
+      ]},
+    ],
+    biweekly:[{title:'격주 점검',items:[]}],
+    monthly:[{title:'월간 점검',items:[]}],
+    quarterly:[{title:'분기 점검',items:[]}],
+    yearly:[{title:'연간 점검',items:[]}],
+  },
+  common:{
+    daily:[{title:'일간 점검',items:[
+      {t:'ColorTrack — 렌즈 및 센서 주변 에어 블로워로 커피 가루 제거'},
+      {t:'시나빈프로 — 호퍼 내부 생두 완전히 비우기'},
+      {t:'시나빈프로 — 잔여 먼지 브러쉬로 청소'},
+      {t:'저울 — 수평계 기포 정중앙 위치 확인'},
+      {t:'저울 — 주변 커피 가루 및 이물질 청소'},
+      {t:'에어 컴프레셔 — 에어탱크 설정 압력 (6~8 bar) 정상 도달 확인'},
+      {t:'항온항습기 — 설정값과 실제 온/습도 편차 확인 (목표: 18~20°C / 40~60%)'},
+      {t:'디스모거 — 필터 상태 및 작동 여부 확인'},
+    ]}],
+    weekly:[{title:'주간 점검',items:[
+      {t:'ColorTrack — 센서 및 광학 모듈 주변 정밀 청소'},
+      {t:'ColorTrack — 본체 하우징 및 샘플 삽입구 청소'},
+      {t:'시나빈프로 — 배터리 잔량 확인'},
+      {t:'시나빈프로 — 센서 전극 부위 이물질 점검'},
+      {t:'에어 컴프레셔 — 드레인 밸브 열어 응축수 100% 배출'},
+      {t:'디팅 그라인더 — 그라인더 뚜껑 청소'},
+      {t:'디팅 그라인더 — 내부 진공청소 (토출구 및 체임버 내부)'},
+    ]}],
+    biweekly:[{title:'격주 점검',items:[]}],
+    monthly:[{title:'월간 점검',items:[]}],
+    quarterly:[{title:'분기 점검',items:[]}],
+    yearly:[{title:'연간 점검',items:[]}],
+  },
+};
+
+/* ===== 상태 ===== */
+let data=JSON.parse(JSON.stringify(DEFAULT));
+let checks={},memos={},editModes={};
+let curMachine='s35',curPeriod='daily';
+
+/* ===== Firebase 연결 ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyBYdNB35mmuU1ZBQCFO_yMeMkQa49KpUi0",
+  authDomain: "roastery-checklist.firebaseapp.com",
+  projectId: "roastery-checklist",
+  storageBucket: "roastery-checklist.firebasestorage.app",
+  messagingSenderId: "301383343456",
+  appId: "1:301383343456:web:821bfbf3cbe10ba4ec5205"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const docRef = db.collection('roastery-checklist').doc('shared-state');
+
+function setSyncStatus(text,color){
+  const el=document.getElementById('sync-status');
+  if(el){el.textContent=text;el.style.color=color||'var(--text3)';}
+}
+
+let firstSnapshot=true;
+
+function subscribe(){
+  docRef.onSnapshot(snap=>{
+    if(snap.exists){
+      const remote=snap.data();
+      data=remote.data||JSON.parse(JSON.stringify(DEFAULT));
+      checks=remote.checks||{};
+      memos=remote.memos||{};
+    }else{
+      data=JSON.parse(JSON.stringify(DEFAULT));
+      checks={};memos={};
+      docRef.set({data,checks,memos,updatedAt:Date.now()});
+    }
+    setSyncStatus('● 실시간 동기화됨','var(--success)');
+    renderAll();
+    firstSnapshot=false;
+  },err=>{
+    console.error(err);
+    setSyncStatus('● 연결 실패 — 새로고침 해주세요','var(--danger-text)');
+  });
+}
+
+async function save(){
+  try{
+    await docRef.set({data,checks,memos,updatedAt:Date.now()});
+  }catch(e){
+    console.error(e);
+    setSyncStatus('● 저장 실패 — 인터넷 연결 확인','var(--danger-text)');
+  }
+}
+
+/* ===== 헬퍼 ===== */
+function secKey(m,p,si){return `${m}:${p}:${si}`;}
+function itemKey(m,p,si,ii){return `${secKey(m,p,si)}:${ii}`;}
+function periodCount(m,p){
+  const secs=(data[m]&&data[m][p])||[];
+  let total=0,done=0;
+  secs.forEach((s,si)=>s.items.forEach((_,ii)=>{total++;if(checks[itemKey(m,p,si,ii)])done++;}));
+  return {total,done};
+}
+
+/* ===== 렌더 ===== */
+function renderTabs(){
+  const mt=document.getElementById('machine-tabs');
+  mt.innerHTML=MACHINES.map(m=>
+    `<button class="tab${m.key===curMachine?' active':''}" onclick="switchMachine('${m.key}')">${m.label}</button>`
+  ).join('');
+
+  const pt=document.getElementById('period-tabs');
+  pt.innerHTML=PERIODS.map(p=>{
+    const {total,done}=periodCount(curMachine,p.key);
+    return `<button class="ptab${p.key===curPeriod?' active':''}" data-p="${p.key}" onclick="switchPeriod('${p.key}')">
+      ${p.label}<span class="cnt">${done}/${total}</span>
+    </button>`;
+  }).join('');
+}
+
+function renderPanel(){
+  const secs=(data[curMachine]&&data[curMachine][curPeriod])||[];
+  const isEdit=!!editModes[curMachine+':'+curPeriod];
+
+  // progress
+  const {total,done}=periodCount(curMachine,curPeriod);
+  document.getElementById('prog-lbl').textContent=PERIODS.find(p=>p.key===curPeriod).label;
+  document.getElementById('pb').style.width=(total>0?Math.round(done/total*100):0)+'%';
+  const pt=document.getElementById('pt');
+  pt.textContent=`${done}/${total}`;
+  pt.className='pb-txt'+(done===total&&total>0?' done':'');
+
+  // sections
+  const wrap=document.getElementById('sections');
+  wrap.innerHTML=secs.map((sec,si)=>{
+    const rows=sec.items.map((item,ii)=>{
+      const k=itemKey(curMachine,curPeriod,si,ii);
+      const checked=checks[k]?'checked':'';
+      const doneCls=checks[k]?' done':'';
+      return `<div class="crow">
+        <input type="checkbox" id="cb-${si}-${ii}" ${checked} onchange="onCheck(${si},${ii})">
+        <label class="clabel${doneCls}" for="cb-${si}-${ii}"
+          ${isEdit?`contenteditable="true" onblur="saveLabel(${si},${ii},this)"`:''}
+        >${item.t}</label>
+        ${item.w?`<span class="wtag">${item.w}</span>`:''}
+        <button class="del-btn" onclick="delItem(${si},${ii})">×</button>
+      </div>`;
+    }).join('') || (isEdit?'':'<div class="sec-empty">등록된 항목이 없습니다. 편집을 눌러 항목을 추가하세요.</div>');
+
+    return `<div class="sec">
+      <div class="sec-hd"><span class="sec-title">${sec.title}</span></div>
+      <div class="cl${isEdit?' edit-active':''}">${rows}</div>
+      <div class="new-row${isEdit?' show':''}">
+        <span class="new-ico">+</span>
+        <input class="new-inp" id="ni-${si}" placeholder="새 항목 입력 후 Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();addItem(${si});}">
+        <input class="new-warn" id="nw-${si}" placeholder="경고 태그">
+        <button class="new-add" onclick="addItem(${si})">추가</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // memo
+  const memoEl=document.getElementById('memo');
+  memoEl.value=memos[curMachine]||'';
+
+  // edit button
+  const eb=document.getElementById('edit-btn');
+  eb.textContent=isEdit?'✅ 완료':'✏️ 편집';
+  eb.classList.toggle('edit-on',isEdit);
+}
+
+function renderAll(){renderTabs();renderPanel();}
+
+/* ===== 이벤트 ===== */
+function switchMachine(m){curMachine=m;renderAll();}
+function switchPeriod(p){curPeriod=p;renderAll();}
+
+function onCheck(si,ii){
+  const k=itemKey(curMachine,curPeriod,si,ii);
+  const cb=document.getElementById(`cb-${si}-${ii}`);
+  checks[k]=cb?cb.checked:false;
+  save();renderAll();
+}
+function saveLabel(si,ii,el){
+  const sec=data[curMachine][curPeriod][si];
+  if(sec&&sec.items[ii])sec.items[ii].t=el.textContent.trim()||sec.items[ii].t;
+  save();
+}
+function delItem(si,ii){
+  const sec=data[curMachine][curPeriod][si];
+  sec.items.splice(ii,1);
+  // 체크 상태 인덱스 밀기
+  const prefix=secKey(curMachine,curPeriod,si)+':';
+  const nc={};
+  Object.keys(checks).forEach(k=>{
+    if(!k.startsWith(prefix)){nc[k]=checks[k];return;}
+    const idx=parseInt(k.slice(prefix.length));
+    if(isNaN(idx))return;
+    if(idx<ii)nc[k]=checks[k];
+    if(idx>ii)nc[prefix+(idx-1)]=checks[k];
+  });
+  checks=nc;save();renderAll();
+}
+function addItem(si){
+  const ni=document.getElementById('ni-'+si),nw=document.getElementById('nw-'+si);
+  if(!ni||!ni.value.trim())return;
+  data[curMachine][curPeriod][si].items.push({t:ni.value.trim(),w:nw.value.trim()||undefined});
+  const val='';
+  save();renderAll();
+  setTimeout(()=>{const el=document.getElementById('ni-'+si);if(el)el.focus();},30);
+}
+function toggleEdit(){
+  const k=curMachine+':'+curPeriod;
+  editModes[k]=!editModes[k];
+  renderPanel();
+}
+function resetCurrent(){
+  const secs=data[curMachine][curPeriod]||[];
+  secs.forEach((sec,si)=>{
+    const prefix=secKey(curMachine,curPeriod,si)+':';
+    Object.keys(checks).forEach(k=>{if(k.startsWith(prefix))delete checks[k];});
+  });
+  save();renderAll();
+}
+function resetAll(){
+  checks={};memos={};editModes={};
+  data=JSON.parse(JSON.stringify(DEFAULT));
+  save();renderAll();
+}
+
+document.getElementById('memo').addEventListener('input',(e)=>{
+  memos[curMachine]=e.target.value;save();
+});
+
+/* ===== 초기화 ===== */
+const days=['일','월','화','수','목','금','토'],now=new Date();
+document.getElementById('today-date').textContent=
+  `${now.getFullYear()}. ${now.getMonth()+1}. ${now.getDate()} (${days[now.getDay()]})`;
+
+subscribe();
+</script>
+</body>
+</html>
