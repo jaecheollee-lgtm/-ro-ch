@@ -378,6 +378,9 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+db.enablePersistence({synchronizeTabs:true}).catch(err=>{
+  console.warn('오프라인 캐시 비활성화됨:', err.code);
+});
 const auth = firebase.auth();
 const docRef = db.collection('roastery-checklist').doc('shared-state');
 
@@ -419,13 +422,22 @@ function subscribe(){
   });
 }
 
-async function save(){
-  try{
-    await docRef.set({data,checks,memos,updatedAt:Date.now()});
-  }catch(e){
-    console.error(e);
-    setSyncStatus('● 저장 실패 — 인터넷 연결 확인','var(--danger-text)');
+async function save(retries=3){
+  for(let i=0;i<retries;i++){
+    try{
+      await docRef.set({data,checks,memos,updatedAt:Date.now()});
+      setSyncStatus('● 실시간 동기화됨','var(--success)');
+      return true;
+    }catch(e){
+      console.error(e);
+      if(i<retries-1){
+        setSyncStatus(`● 저장 재시도 중... (${i+1}/${retries})`,'var(--text3)');
+        await new Promise(r=>setTimeout(r,900*(i+1)));
+      }
+    }
   }
+  setSyncStatus('● 저장 실패 — 인터넷 연결 확인 후 새로고침','var(--danger-text)');
+  return false;
 }
 
 /* ===== 헬퍼 ===== */
