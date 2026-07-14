@@ -552,7 +552,7 @@ function delItem(si,ii){
 function addItem(si){
   const ni=document.getElementById('ni-'+si),nw=document.getElementById('nw-'+si);
   if(!ni||!ni.value.trim())return;
-  data[curMachine][curPeriod][si].items.push({t:ni.value.trim(),w:nw.value.trim()||undefined});
+  data[curMachine][curPeriod][si].items.push({t:ni.value.trim(),w:nw.value.trim()||''});
   const val='';
   save();renderAll();
   setTimeout(()=>{const el=document.getElementById('ni-'+si);if(el)el.focus();},30);
